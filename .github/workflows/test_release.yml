@@ -2,7 +2,7 @@ name: Create Release
 
 on:
   push:
-    tags-ignore:
+    tags:
       - testing_*
 
 jobs:
@@ -15,10 +15,12 @@ jobs:
       - name: Prepare Environment
         uses: ./.github/actions/prepare-environment
         with:
+          dalamud-distrib: stg/
           project: Shrinkage
       - name: Build and Upload Artifact
         uses: ./.github/actions/build-with-artifact
         with:
+          configuration: Debug
           project: Shrinkage
           version: ${{ github.ref_name }}
       - name: Create Release
@@ -33,3 +35,4 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           project: Shrinkage
           version: ${{ github.ref_name }}
+          testing: true
