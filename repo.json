@@ -1,0 +1,22 @@
+[
+  {
+    "Author": "InsubstantialCoder",
+    "Name": "Shrinkage",
+    "Description": "shrinkage",
+    "InternalName": "Shrinkage",
+    "AssemblyVersion": "0.1.1.0",
+    "TestingAssemblyVersion": "0.1.1.0",
+    "RepoUrl": "https://github.com/InsubstantialCoder/Shrinkage",
+    "ApplicableVersion": "any",
+    "DalamudApiLevel": 13,
+    "IsHide": "False",
+    "IsTestingExclusive": "False",
+    "DownloadCount": 0,
+    "LastUpdate": 0,
+    "LoadPriority": 69420,
+    "DownloadLinkInstall": "https://github.com/InsubstantialCoder/Shrinkage/releases/download/release/shrinkage0_1_1.zip",
+    "DownloadLinkTesting": "https://github.com/InsubstantialCoder/Shrinkage/releases/download/release/shrinkage0_1_1.zip",
+    "DownloadLinkUpdate": "https://github.com/InsubstantialCoder/Shrinkage/releases/download/release/shrinkage0_1_1.zip",
+    "IconUrl": "https://raw.githubusercontent.com/InsubstantialCoder/Shrinkage/refs/heads/master/Shrinkage/images/icon.png"
+  }
+]
