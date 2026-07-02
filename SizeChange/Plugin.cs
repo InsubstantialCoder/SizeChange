@@ -19,6 +19,7 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IPartyList PartyList { get; private set; } = null!;
     [PluginService] internal static IFramework Framework { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
+    //[PluginService] internal static IPluginLog Logger { get; private set; } = null!;
 
     private const string CommandName = "/sizechange";
 
@@ -70,7 +71,7 @@ public sealed class Plugin : IDalamudPlugin
         if (ClientState.IsPvP){ return; }
         
         // runs the first statement if not in party or shrink party is set to false, else iterates through entire party and shrinks members individually
-        if (PartyList.Length == 0 || !Configuration.ShrinkParty)
+        if (PartyList.Length == 0 || !Configuration.AlterParty)
         {
             var player = ObjectTable.LocalPlayer;
             if (player == null) return;
@@ -97,7 +98,8 @@ public sealed class Plugin : IDalamudPlugin
         float shield = (actor->ShieldValue / 100f) * maxhp;
         float health = actor->Health + shield;
         float hpRatio = health / maxhp;
-        float targetScale = Math.Clamp(hpRatio, Configuration.MinScale, 1f);
+        //Logger.Information("hpRatio is {hpRatio}", hpRatio);
+        float targetScale = Math.Clamp(hpRatio, Configuration.MinScale, 3.0f);
 
         var draw = (CharacterBase*)actor->DrawObject;
 
@@ -106,7 +108,6 @@ public sealed class Plugin : IDalamudPlugin
             float scale = draw->Scale.Y;
             scale = float.Lerp(scale, targetScale, Configuration.Speed / 60f);
             draw->Scale = new Vector3(scale, scale, scale);
-            
         }
     }
     

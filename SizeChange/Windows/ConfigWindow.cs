@@ -24,7 +24,8 @@ public class ConfigWindow : Window, IDisposable
     {
         var speed = configuration.Speed;
         var minScale = configuration.MinScale;
-        var shrinkParty = configuration.ShrinkParty;
+        var maxScale = configuration.MaxScale;
+        var AlterParty = configuration.AlterParty;
 
         if (ImGui.DragFloat("Minimum Size", ref minScale, 0.01F, 0.01F, 1.00F))
         {
@@ -33,23 +34,31 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
-        if (ImGui.DragFloat("Shrink Speed", ref speed, 0.1F, 0.1F, 100.0F))
+        // if (ImGui.DragFloat("Maximum Size", ref maxScale, 0.1F, 0.01F, 10.00F))
+        // {
+        //     if (maxScale < 1.00F){ maxScale = 1.00F; }
+        //     configuration.MaxScale = maxScale;
+        //     configuration.Save();
+        // }
+
+        if (ImGui.DragFloat("Speed", ref speed, 0.1F, 0.1F, 100.0F))
         {
             configuration.Speed = speed;
             configuration.Save();
         }
         
-        if (ImGui.Checkbox("Shrink Party", ref shrinkParty))
+        if (ImGui.Checkbox("Scale Party", ref AlterParty))
         {
-            configuration.ShrinkParty = shrinkParty;
+            configuration.AlterParty = AlterParty;
             configuration.Save();
         }
         
 
         if (ImGui.Button("Default"))
         {
-            configuration.ShrinkParty = true;
+            configuration.AlterParty = true;
             configuration.MinScale = 0.1f;
+            configuration.MaxScale = 1.0f;
             configuration.Speed = 2.0f;
             configuration.Save();
         }
