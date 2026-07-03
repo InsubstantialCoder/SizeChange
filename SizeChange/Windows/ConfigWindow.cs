@@ -27,6 +27,7 @@ public class ConfigWindow : Window, IDisposable
         var maxScale = configuration.MaxScale;
         var AlterParty = configuration.AlterParty;
         var Enable = configuration.Enable;
+        var GrowFromDamage = configuration.GrowFromDamage;
         var OnlyActiveInCombat = configuration.OnlyActiveInCombat;
 
         if (ImGui.DragFloat("Minimum Size", ref minScale, 0.01F, 0.01F, 1.00F))
@@ -66,7 +67,18 @@ public class ConfigWindow : Window, IDisposable
             configuration.OnlyActiveInCombat = OnlyActiveInCombat;
             configuration.Save();
         }
+
+        if (ImGui.Checkbox("Only Active in Combat", ref OnlyActiveInCombat))
+        {
+            configuration.OnlyActiveInCombat = OnlyActiveInCombat;
+            configuration.Save();
+        }
         
+        if (ImGui.Checkbox("Grow From Damage", ref GrowFromDamage))
+        {
+            configuration.GrowFromDamage = GrowFromDamage;
+            configuration.Save();
+        }
 
         if (ImGui.Button("Default"))
         {
@@ -74,6 +86,9 @@ public class ConfigWindow : Window, IDisposable
             configuration.MinScale = 0.1f;
             configuration.MaxScale = 1.0f;
             configuration.Speed = 2.0f;
+            configuration.Enable = true;
+            configuration.OnlyActiveInCombat = false;
+            configuration.GrowFromDamage = false;
             configuration.Save();
         }
         

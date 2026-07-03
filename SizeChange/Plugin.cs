@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
@@ -101,7 +101,14 @@ public sealed class Plugin : IDalamudPlugin
             var player = ObjectTable.LocalPlayer;
             if (player == null) return;
 
-            AdjustScale((Character*)player.Address);
+            if(Configuration.GrowFromDamage)
+            {
+                AdjustScaleGrowFromDamage((Character*)player.Address);
+            }
+            else 
+            {
+                AdjustScale((Character*)player.Address);
+            }
         }
         else
         {
@@ -110,8 +117,40 @@ public sealed class Plugin : IDalamudPlugin
                 var actor = member.GameObject;
                 if (actor == null) continue;
                 
-                AdjustScale((Character*)actor.Address);
+                if(Configuration.GrowFromDamage)
+                {
+                    AdjustScaleGrowFromDamage((Character*)actor.Address);
+                }
+                else
+                {
+                    AdjustScale((Character*)actor.Address);
+                }
             }
+        }
+    }
+
+    public unsafe void AdjustScaleGrowFromDamage(Character* actor)
+    {
+        if (actor == null) return;
+        float maxhp = actor->MaxHealth;
+        float shield = (actor->ShieldValue / 100f) * maxhp;
+        float health = actor->Health + shield;
+        float hpRatio = health / maxhp;
+        Logger.Information("hpRatio is {hpRatio}", hpRatio);
+        float targetScale = Math.Clamp(Configuration.MaxScale - (Configuration.MaxScale * hpRatio), 
+            Configuration.MinScale, Configuration.MaxScale);
+        Logger.Information("targetScale is {targetScale}", targetScale);
+
+        var draw = (CharacterBase*)actor->DrawObject;
+
+        if (draw != null)
+        {
+            float scale = draw->Scale.Y;
+            Logger.Information("current scale is {scale}", scale);
+            
+            scale = float.Lerp(scale, targetScale, Configuration.Speed / 100f);
+            Logger.Information("scale after lerp is {scale}", scale);
+            draw->Scale = new Vector3(scale, scale, scale);
         }
     }
 

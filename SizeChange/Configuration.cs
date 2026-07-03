@@ -17,6 +17,7 @@ public class Configuration : IPluginConfiguration
     public float MaxScale { get; set; } = 1.0f;
     public bool OnlyActiveInCombat { get; set; } = false;
     public bool Enable { get; set; } = true;
+    public bool GrowFromDamage { get; set; } = false;
     
     public void Save()
     {
