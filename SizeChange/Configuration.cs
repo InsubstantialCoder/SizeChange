@@ -15,6 +15,8 @@ public class Configuration : IPluginConfiguration
     // the minimum size of the model
     public float MinScale { get; set; } = 0.1f;
     public float MaxScale { get; set; } = 1.0f;
+    public bool OnlyActiveInCombat { get; set; } = false;
+    public bool Enable { get; set; } = true;
     
     public void Save()
     {

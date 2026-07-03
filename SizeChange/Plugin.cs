@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Diagnostics;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -8,6 +9,10 @@ using SizeChange.Windows;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Graphics.Scene;
 using Vector3 = FFXIVClientStructs.FFXIV.Common.Math.Vector3;
+using Dalamud.Game.ClientState.Conditions;
+using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.Game.ClientState.Objects.Types;
 
 namespace SizeChange;
 
@@ -19,14 +24,18 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IPartyList PartyList { get; private set; } = null!;
     [PluginService] internal static IFramework Framework { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
-    //[PluginService] internal static IPluginLog Logger { get; private set; } = null!;
+    [PluginService] internal static ICondition Condition { get; private set; } = null!;
+    [PluginService] internal static IPluginLog Logger { get; private set; } = null!;
 
     private const string CommandName = "/sizechange";
+    private const string Parameter_Enable = "enable";
+    private const string Parameter_Disable = "disable";
 
     public Configuration Configuration { get; init; }
 
     public readonly WindowSystem WindowSystem = new("SizeChange");
     private ConfigWindow ConfigWindow { get; init; }
+    //private Dictionary<uint, long> _characterIdToTimestampMap = new Dictionary<uint, long>();
     public Plugin()
     {
         Framework.Update += OnFrameworkUpdate;
@@ -62,13 +71,29 @@ public sealed class Plugin : IDalamudPlugin
 
     private void OnCommand(string command, string args)
     {
-        ConfigWindow.Toggle();
+        if(args == "")
+        {
+            ConfigWindow.Toggle();
+        }
+
+        if(args == Parameter_Enable)
+        {
+            Configuration.Enable = true;
+        }
+        if(args == Parameter_Disable)
+        {
+            Configuration.Enable = false;
+        }
     }
     
     private unsafe void OnFrameworkUpdate(IFramework framework)
     {
         // disabled during pvp
-        if (ClientState.IsPvP){ return; }
+        if (ClientState.IsPvP || !Configuration.Enable|| (Configuration.OnlyActiveInCombat && !Condition[ConditionFlag.InCombat]))
+        { 
+            Logger.Information("Update is disabled");
+            return; 
+        }
         
         // runs the first statement if not in party or shrink party is set to false, else iterates through entire party and shrinks members individually
         if (PartyList.Length == 0 || !Configuration.AlterParty)
@@ -98,15 +123,19 @@ public sealed class Plugin : IDalamudPlugin
         float shield = (actor->ShieldValue / 100f) * maxhp;
         float health = actor->Health + shield;
         float hpRatio = health / maxhp;
-        //Logger.Information("hpRatio is {hpRatio}", hpRatio);
-        float targetScale = Math.Clamp(hpRatio, Configuration.MinScale, 3.0f);
+        Logger.Information("hpRatio is {hpRatio}", hpRatio);
+        float targetScale = Math.Clamp(hpRatio, Configuration.MinScale, Configuration.MaxScale);
+        Logger.Information("targetScale is {targetScale}", targetScale);
 
         var draw = (CharacterBase*)actor->DrawObject;
 
         if (draw != null)
         {
             float scale = draw->Scale.Y;
-            scale = float.Lerp(scale, targetScale, Configuration.Speed / 60f);
+            Logger.Information("current scale is {scale}", scale);
+            
+            scale = float.Lerp(scale, targetScale, Configuration.Speed / 100f);
+            Logger.Information("scale after lerp is {scale}", scale);
             draw->Scale = new Vector3(scale, scale, scale);
         }
     }
