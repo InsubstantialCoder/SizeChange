@@ -12,7 +12,7 @@ public class ConfigWindow : Window, IDisposable
     public ConfigWindow(Plugin plugin) : base("SizeChange Config")
     {
 
-        Size = new Vector2(350, 280);
+        //Size = new Vector2(350, 280);
         SizeCondition = ImGuiCond.Always;
 
         configuration = plugin.Configuration;
@@ -59,12 +59,6 @@ public class ConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Enable", ref Enable))
         {
             configuration.Enable = Enable;
-            configuration.Save();
-        }
-
-        if (ImGui.Checkbox("Only Active in Combat", ref OnlyActiveInCombat))
-        {
-            configuration.OnlyActiveInCombat = OnlyActiveInCombat;
             configuration.Save();
         }
 

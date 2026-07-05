@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
@@ -35,6 +36,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public readonly WindowSystem WindowSystem = new("SizeChange");
     private ConfigWindow ConfigWindow { get; init; }
+    private Dictionary<uint, float> CharacterIdToLastScaleMap = new Dictionary<uint, float>();
     //private Dictionary<uint, long> _characterIdToTimestampMap = new Dictionary<uint, long>();
     public Plugin()
     {
@@ -88,27 +90,14 @@ public sealed class Plugin : IDalamudPlugin
     
     private unsafe void OnFrameworkUpdate(IFramework framework)
     {
-        // disabled during pvp
-        if (ClientState.IsPvP || !Configuration.Enable|| (Configuration.OnlyActiveInCombat && !Condition[ConditionFlag.InCombat]))
-        { 
-            Logger.Information("Update is disabled");
-            return; 
-        }
+        bool disable = (ClientState.IsPvP || !Configuration.Enable|| (Configuration.OnlyActiveInCombat && !Condition[ConditionFlag.InCombat]));
         
-        // runs the first statement if not in party or shrink party is set to false, else iterates through entire party and shrinks members individually
         if (PartyList.Length == 0 || !Configuration.AlterParty)
         {
             var player = ObjectTable.LocalPlayer;
             if (player == null) return;
 
-            if(Configuration.GrowFromDamage)
-            {
-                AdjustScaleGrowFromDamage((Character*)player.Address);
-            }
-            else 
-            {
-                AdjustScale((Character*)player.Address);
-            }
+            AdjustScale((Character*)player.Address, Configuration.GrowFromDamage, disable);
         }
         else
         {
@@ -117,45 +106,13 @@ public sealed class Plugin : IDalamudPlugin
                 var actor = member.GameObject;
                 if (actor == null) continue;
                 
-                if(Configuration.GrowFromDamage)
-                {
-                    AdjustScaleGrowFromDamage((Character*)actor.Address);
-                }
-                else
-                {
-                    AdjustScale((Character*)actor.Address);
-                }
+                AdjustScale((Character*)actor.Address, Configuration.GrowFromDamage, disable);
             }
         }
     }
 
-    public unsafe void AdjustScaleGrowFromDamage(Character* actor)
-    {
-        if (actor == null) return;
-        float maxhp = actor->MaxHealth;
-        float shield = (actor->ShieldValue / 100f) * maxhp;
-        float health = actor->Health + shield;
-        float hpRatio = health / maxhp;
-        Logger.Information("hpRatio is {hpRatio}", hpRatio);
-        float targetScale = Math.Clamp(Configuration.MaxScale - (Configuration.MaxScale * hpRatio), 
-            Configuration.MinScale, Configuration.MaxScale);
-        Logger.Information("targetScale is {targetScale}", targetScale);
-
-        var draw = (CharacterBase*)actor->DrawObject;
-
-        if (draw != null)
-        {
-            float scale = draw->Scale.Y;
-            Logger.Information("current scale is {scale}", scale);
-            
-            scale = float.Lerp(scale, targetScale, Configuration.Speed / 100f);
-            Logger.Information("scale after lerp is {scale}", scale);
-            draw->Scale = new Vector3(scale, scale, scale);
-        }
-    }
-
     // find the actor's health and shield value and uses that to adjust the model's scale
-    public unsafe void AdjustScale(Character* actor)
+    public unsafe void AdjustScale(Character* actor, bool growFromDamage, bool disable)
     {
         if (actor == null) return;
         float maxhp = actor->MaxHealth;
@@ -163,7 +120,9 @@ public sealed class Plugin : IDalamudPlugin
         float health = actor->Health + shield;
         float hpRatio = health / maxhp;
         Logger.Information("hpRatio is {hpRatio}", hpRatio);
-        float targetScale = Math.Clamp(hpRatio, Configuration.MinScale, Configuration.MaxScale);
+        float targetScale = disable ? 1.0f : growFromDamage ? 
+            Math.Clamp(Configuration.MaxScale - (Configuration.MaxScale * hpRatio), Configuration.MinScale, Configuration.MaxScale) : 
+            Math.Clamp(hpRatio, Configuration.MinScale, Configuration.MaxScale);
         Logger.Information("targetScale is {targetScale}", targetScale);
 
         var draw = (CharacterBase*)actor->DrawObject;
@@ -176,6 +135,7 @@ public sealed class Plugin : IDalamudPlugin
             scale = float.Lerp(scale, targetScale, Configuration.Speed / 100f);
             Logger.Information("scale after lerp is {scale}", scale);
             draw->Scale = new Vector3(scale, scale, scale);
+            actor->Scale = scale;
         }
     }
     
