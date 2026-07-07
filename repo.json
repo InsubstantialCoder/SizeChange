@@ -4,16 +4,16 @@
     "Name": "SizeChange",
     "Description": "SizeChange",
     "InternalName": "SizeChange",
-    "AssemblyVersion": "1.3.2.0",
-    "TestingAssemblyVersion": "1.3.2.0",
+    "AssemblyVersion": "1.3.3.0",
+    "TestingAssemblyVersion": "1.3.3.0",
     "RepoUrl": "https://github.com/InsubstantialCoder/SizeChange",
     "ApplicableVersion": "any",
     "DalamudApiLevel": 15,
     "IsHide": "False",
     "IsTestingExclusive": "False",
-    "DownloadLinkInstall": "https://github.com/InsubstantialCoder/SizeChange/releases/download/1.3.2.0/SizeChange.zip",
-    "DownloadLinkTesting": "https://github.com/InsubstantialCoder/SizeChange/releases/download/1.3.2.0/SizeChange.zip",
-    "DownloadLinkUpdate": "https://github.com/InsubstantialCoder/SizeChange/releases/download/1.3.2.0/SizeChange.zip",
+    "DownloadLinkInstall": "https://github.com/InsubstantialCoder/SizeChange/releases/download/1.3.3.0/SizeChange.zip",
+    "DownloadLinkTesting": "https://github.com/InsubstantialCoder/SizeChange/releases/download/1.3.3.0/SizeChange.zip",
+    "DownloadLinkUpdate": "https://github.com/InsubstantialCoder/SizeChange/releases/download/1.3.3.0/SizeChange.zip",
     "IconUrl": "https://raw.githubusercontent.com/InsubstantialCoder/SizeChange/refs/heads/master/SizeChange/images/icon.png"
   }
 ]
