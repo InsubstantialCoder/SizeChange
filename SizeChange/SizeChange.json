@@ -1,8 +1,8 @@
 {
   "Author": "InsubstantialCoder",
   "Name": "SizeChange",
-  "Punchline": "Shrinks characters based on their Health!",
-  "Description": "This plugin will shrink and grow characters based on how much health they have, affects you and your party \n\n/SizeChange to open the config window.",
+  "Punchline": "Changes characters sizes based on their Health!",
+  "Description": "This plugin will shrink and grow characters based on how much health they have, affects you and your party \n\n/sizechange to open the config window.",
   "ApplicableVersion": "any",
   "Tags": [
       "funny"
