@@ -187,8 +187,16 @@ public sealed class Plugin : IDalamudPlugin
         {
             int len = SIZE_VERSION + SIZE_HANDLE + SIZE_SEQ + SIZE_SCALE + SIZE_CONTENTID;
             byte[] pkt = new byte[len];
-            while (localContentId == 0L && syncing) Thread.Sleep(100);
-            if (!syncing) return;
+            while (localContentId == 0L && syncing) 
+            {
+                Logger.Info("Waiting for localContentId to not be 0");
+                Thread.Sleep(100);
+            }
+            if (!syncing) 
+            {
+                Logger.Warning("Not syncing.");
+                return;
+            }
             uint seq = 0;
             uint offset = 0;
 
@@ -216,6 +224,7 @@ public sealed class Plugin : IDalamudPlugin
                 byte[] scaleBytes = BitConverter.GetBytes(localScale);
                 scaleBytes.CopyTo(pkt, offset);
 
+                Logger.Info("Sending packet with length {len} scale is {localScale} just FYI", len, localScale);
                 udpClient.Send(pkt, len);
 
                 int sleepTime = MS_PER_FRAME - (int)sendTimer.ElapsedMilliseconds;

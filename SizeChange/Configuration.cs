@@ -28,6 +28,10 @@ public class Configuration : IPluginConfiguration
         {
             Speed = 0.1f;
         }
+        if (Speed >= 100)
+        {
+            Speed = 100;
+        }
         
         Plugin.PluginInterface.SavePluginConfig(this);
     }
