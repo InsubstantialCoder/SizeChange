@@ -114,12 +114,12 @@ public sealed class Plugin : IDalamudPlugin
     public void ReceiveRemoteData()
     {
         byte[] buf = new byte[MAX_RESPONSE_COUNT*(SIZE_CONTENTID+SIZE_SCALE)+SIZE_SEQ+SIZE_VERSION+SIZE_HANDLE];
-        try
-        {
-            uint lastSeq = 0;
+   
+        uint lastSeq = 0;
 
-            while (syncing)
-            {
+        while (syncing)
+        {
+            try{
                 if (!Configuration.Sync) { Thread.Sleep(100); continue; }
 
                 int len;
@@ -128,7 +128,14 @@ public sealed class Plugin : IDalamudPlugin
                 {
                     len = udpClient.Client.Receive(buf);
                 }
-                catch (SocketException) { continue; }
+                catch (SocketException ex) 
+                {
+                    Logger.Error(ex.Message); 
+                    udpClient.Close();
+                    udpClient = new UdpClient("sc.rpg.town", 7878);
+                    userHandle = 0;
+                    continue; 
+                }
                 if(len < SIZE_CONTENTID+SIZE_SCALE+SIZE_SEQ+SIZE_VERSION+SIZE_HANDLE)
                 {
                     Logger.Warning("Short packet received: {len}{buf}", len, buf);
@@ -176,34 +183,35 @@ public sealed class Plugin : IDalamudPlugin
 
                 CharacterUpdates.Enqueue(scaleMapping);
             }
+            catch (ObjectDisposedException) { }
+            catch (Exception ex) { Logger.Warning("receive thread: {msg}", ex.Message); }
         }
-        catch (ObjectDisposedException) { }
-        catch (Exception ex) { Logger.Warning("receive thread: {msg}", ex.Message); }
+
     }
 
     public void SendRemoteData()
     {
-        try
+        int len = SIZE_VERSION + SIZE_HANDLE + SIZE_SEQ + SIZE_SCALE + SIZE_CONTENTID;
+        byte[] pkt = new byte[len];
+        while (localContentId == 0L && syncing) 
         {
-            int len = SIZE_VERSION + SIZE_HANDLE + SIZE_SEQ + SIZE_SCALE + SIZE_CONTENTID;
-            byte[] pkt = new byte[len];
-            while (localContentId == 0L && syncing) 
-            {
-                Logger.Info("Waiting for localContentId to not be 0");
-                Thread.Sleep(100);
-            }
-            if (!syncing) 
-            {
-                Logger.Warning("Not syncing.");
-                return;
-            }
-            uint seq = 0;
-            uint offset = 0;
+            Logger.Info("Waiting for localContentId to not be 0");
+            Thread.Sleep(100);
+        }
+        if (!syncing) 
+        {
+            Logger.Warning("Not syncing.");
+            return;
+        }
+        uint seq = 0;
+        uint offset = 0;
 
-            byte[] ver = BitConverter.GetBytes(VERSION);
-            ver.CopyTo(pkt, 0);
+        byte[] ver = BitConverter.GetBytes(VERSION);
+        ver.CopyTo(pkt, 0);
 
-            while (syncing)
+        while (syncing)
+        {
+            try
             {
                 offset = SIZE_VERSION;
                 if (!Configuration.Sync) { Thread.Sleep(100); continue; }
@@ -231,10 +239,11 @@ public sealed class Plugin : IDalamudPlugin
                 sendTimer.Restart();
                 if (sleepTime > 0) Thread.Sleep(sleepTime);
             }
+            catch (ObjectDisposedException ex) { Logger.Warning(ex.Message); }
+            catch (SocketException ex) { Logger.Warning(ex.Message); }
+            catch (Exception ex) { Logger.Warning("send thread: {msg}", ex.Message); }
         }
-        catch (ObjectDisposedException ex) { Logger.Warning(ex.Message); }
-        catch (SocketException ex) { Logger.Warning(ex.Message); }
-        catch (Exception ex) { Logger.Warning("send thread: {msg}", ex.Message); }
+
     }
 
     public void Dispose()
