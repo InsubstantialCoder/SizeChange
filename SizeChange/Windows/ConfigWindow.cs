@@ -11,7 +11,6 @@ public class ConfigWindow : Window, IDisposable
     
     public ConfigWindow(Plugin plugin) : base("SizeChange Config")
     {
-
         //Size = new Vector2(350, 280);
         SizeCondition = ImGuiCond.Always;
 
@@ -22,17 +21,24 @@ public class ConfigWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var speed = configuration.Speed;
+        var speed = configuration.Speed*100f;
         var minScaleMultiplier = configuration.MinScaleMultiplier;
         var maxScaleMultiplier = configuration.MaxScaleMultiplier;
         var AlterAnyone = configuration.AlterAnyone;
         var Enable = configuration.Enable;
         var GrowFromDamage = configuration.GrowFromDamage;
         var OnlyActiveInCombat = configuration.OnlyActiveInCombat;
+        bool Sync = configuration.Sync;
 
-        if (ImGui.Checkbox("Enable", ref Enable))
+        if (ImGui.Checkbox("Change Scale on Damage", ref Enable))
         {
             configuration.Enable = Enable;
+            configuration.Save();
+        }
+
+        if (ImGui.Checkbox("Sync", ref Sync))
+        {
+            configuration.Sync = Sync;
             configuration.Save();
         }
         
@@ -59,7 +65,7 @@ public class ConfigWindow : Window, IDisposable
             if(speed <= 0){
                 speed = 0.1f;
             }
-            configuration.Speed = speed;
+            configuration.Speed = speed/100f;
             configuration.Save();
         }
 
@@ -82,7 +88,7 @@ public class ConfigWindow : Window, IDisposable
             configuration.AlterAnyone = false;
             configuration.MinScaleMultiplier = 0.1f;
             configuration.MaxScaleMultiplier = 1.0f;
-            configuration.Speed = 2.0f;
+            configuration.Speed = 2.0f/100f;
             configuration.Enable = true;
             configuration.OnlyActiveInCombat = false;
             configuration.GrowFromDamage = false;
