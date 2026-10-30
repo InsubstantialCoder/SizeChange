@@ -223,7 +223,7 @@ public sealed class Plugin : IDalamudPlugin
                 if (sleepTime > 0) Thread.Sleep(sleepTime);
             }
         }
-        catch (ObjectDisposedException) { }
+        catch (ObjectDisposedException) { Logger.Warning(ex.Message); }
         catch (SocketException ex) { Logger.Warning(ex.Message); }
         catch (Exception ex) { Logger.Warning("send thread: {msg}", ex.Message); }
     }
