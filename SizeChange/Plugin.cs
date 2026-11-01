@@ -391,7 +391,14 @@ public sealed class Plugin : IDalamudPlugin
             float targetScale = (disable || charState.Syncing) ? charState.PlayerScale : growFromDamage ? 
             Math.Clamp(Configuration.MaxScaleMultiplier - (Configuration.MaxScaleMultiplier * hpRatio), Configuration.MinScaleMultiplier, Configuration.MaxScaleMultiplier)*charState.PlayerScale : 
             Math.Clamp(hpRatio, Configuration.MinScaleMultiplier, float.PositiveInfinity)*charState.PlayerScale;
-            scale = float.Lerp(previousScale, targetScale, Configuration.Speed);
+            if(charState.Syncing)
+            {
+                scale = targetScale;
+            }
+            else
+            {
+                scale = float.Lerp(previousScale, targetScale, Configuration.Speed);
+            }
             
             draw->Scale = new Vector3(scale, scale, scale);
 
