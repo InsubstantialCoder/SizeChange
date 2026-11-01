@@ -24,6 +24,7 @@ namespace SizeChange;
 struct SCCharacterState {
     public float PlayerScale;
     public float PreviousScale;
+    public bool Syncing;
 }
 
 struct SCContentIDScale {
@@ -177,8 +178,8 @@ public sealed class Plugin : IDalamudPlugin
                 {
                     scaleMapping[i].ContentId = BitConverter.ToUInt64(buf, offset+i*(SIZE_SCALE+SIZE_CONTENTID));
                     scaleMapping[i].Scale = BitConverter.ToSingle(buf, offset+i*(SIZE_SCALE+SIZE_CONTENTID)+SIZE_CONTENTID);
-                    Logger.Info("ContentID {ContentId} has scale {Scale}", scaleMapping[i].ContentId, scaleMapping[i].Scale);
-                    Logger.Info("numScales is {numScales}", numScales);
+                    //Logger.Info("ContentID {ContentId} has scale {Scale}", scaleMapping[i].ContentId, scaleMapping[i].Scale);
+                    //Logger.Info("numScales is {numScales}", numScales);
                 }
 
                 CharacterUpdates.Enqueue(scaleMapping);
@@ -195,7 +196,7 @@ public sealed class Plugin : IDalamudPlugin
         byte[] pkt = new byte[len];
         while (localContentId == 0L && syncing) 
         {
-            Logger.Info("Waiting for localContentId to not be 0");
+            //Logger.Info("Waiting for localContentId to not be 0");
             Thread.Sleep(100);
         }
         if (!syncing) 
@@ -232,7 +233,7 @@ public sealed class Plugin : IDalamudPlugin
                 byte[] scaleBytes = BitConverter.GetBytes(localScale);
                 scaleBytes.CopyTo(pkt, offset);
 
-                Logger.Info("Sending packet with length {len} scale is {localScale} just FYI", len, localScale);
+                //Logger.Info("Sending packet with length {len} scale is {localScale} just FYI", len, localScale);
                 udpClient.Send(pkt, len);
 
                 int sleepTime = MS_PER_FRAME - (int)sendTimer.ElapsedMilliseconds;
@@ -329,6 +330,7 @@ public sealed class Plugin : IDalamudPlugin
                 if (!ContentIdToCharacterScaleMap.TryGetValue(scaleTuple.ContentId, out var charState))
                     charState = new SCCharacterState { PreviousScale = 1.0f };
                 charState.PlayerScale = scaleTuple.Scale;
+                charState.Syncing = true;
                 ContentIdToCharacterScaleMap[scaleTuple.ContentId] = charState;
             }
         }
@@ -370,17 +372,23 @@ public sealed class Plugin : IDalamudPlugin
             {
                 charState = ContentIdToCharacterScaleMap[actor->ContentId];
                 previousScale = charState.PreviousScale;
+                if(!Configuration.Sync)
+                {
+                    charState.Syncing = false;
+                    charState.PlayerScale = 1.0f;
+                }
             }
             else
             {
                 charState.PlayerScale = 1.0f;
+                charState.Syncing = false;
             }
             if (previousScale != scale)
             {
                 charState.PlayerScale = scale;
             }
             
-            float targetScale = disable ? charState.PlayerScale : growFromDamage ? 
+            float targetScale = (disable || charState.Syncing) ? charState.PlayerScale : growFromDamage ? 
             Math.Clamp(Configuration.MaxScaleMultiplier - (Configuration.MaxScaleMultiplier * hpRatio), Configuration.MinScaleMultiplier, Configuration.MaxScaleMultiplier)*charState.PlayerScale : 
             Math.Clamp(hpRatio, Configuration.MinScaleMultiplier, float.PositiveInfinity)*charState.PlayerScale;
             scale = float.Lerp(previousScale, targetScale, Configuration.Speed);
