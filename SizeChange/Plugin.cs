@@ -394,9 +394,19 @@ public sealed class Plugin : IDalamudPlugin
             scale = float.Lerp(previousScale, targetScale, Configuration.Speed);
             
             draw->Scale = new Vector3(scale, scale, scale);
+
             actor->Scale = scale;
             charState.PreviousScale = scale;
             ContentIdToCharacterScaleMap[actor->ContentId] = charState;
+            var mount = actor->Mount.MountObject;
+            if(mount != null)
+            {
+                var mountDraw = (CharacterBase*) mount->DrawObject;
+                if(mountDraw != null)
+                {
+                    mountDraw->Scale = new Vector3(scale, scale, scale);
+                }
+            }
             if(isLocalPlayer)
             {
                 localContentId = actor->ContentId;
