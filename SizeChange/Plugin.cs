@@ -44,6 +44,8 @@ public sealed class Plugin : IDalamudPlugin
 
     private const string CommandName_SizeChange = "/sizechange";
     private const string CommandName_Scale = "/scale";
+    private const string CommandName_Grow = "/grow";
+    private const string CommandName_Shrink = "/shrink";
     private const string Parameter_Enable = "enable";
     private const string Parameter_Disable = "disable";
     private const int MS_PER_FRAME = 33;
@@ -95,6 +97,17 @@ public sealed class Plugin : IDalamudPlugin
         {
             HelpMessage = "sets character's scale"
         });
+
+        CommandManager.AddHandler(CommandName_Grow, new CommandInfo(OnCommand)
+        {
+            HelpMessage = "increases character's scale"
+        });
+
+        CommandManager.AddHandler(CommandName_Shrink, new CommandInfo(OnCommand)
+        {
+            HelpMessage = "decreases character's scale"
+        });
+        
         
         PluginInterface.UiBuilder.Draw += WindowSystem.Draw;
         
@@ -262,6 +275,8 @@ public sealed class Plugin : IDalamudPlugin
 
         CommandManager.RemoveHandler(CommandName_SizeChange);
         CommandManager.RemoveHandler(CommandName_Scale);
+        CommandManager.RemoveHandler(CommandName_Grow);
+        CommandManager.RemoveHandler(CommandName_Shrink);
     }
 
     private unsafe void OnCommand(string command, string args)
@@ -282,15 +297,27 @@ public sealed class Plugin : IDalamudPlugin
             }
         }
 
-        if(command == CommandName_Scale)
+        if(command == CommandName_Scale || command == CommandName_Shrink || command == CommandName_Grow)
         {
             float from_arg;
             if(float.TryParse(args, out from_arg))
             {
+                from_arg = Math.Abs(from_arg);
                 var player = ObjectTable.LocalPlayer;
                 if (player != null) 
                 {
-                    UpdateScale((Character*)player.Address, from_arg);
+                    if(command == CommandName_Scale)
+                    {
+                        UpdateScale((Character*)player.Address, from_arg);
+                    }
+                    else if(command == CommandName_Shrink)
+                    {
+                        UpdateScale((Character*)player.Address, localScale/(1.0f + (from_arg/100.0f)));
+                    }
+                    else if(command == CommandName_Grow)
+                    {
+                        UpdateScale((Character*)player.Address, localScale*(1.0f + (from_arg/100.0f)));
+                    }
                 }
             }
         }
