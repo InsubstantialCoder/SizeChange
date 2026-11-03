@@ -11,7 +11,6 @@ public class ConfigWindow : Window, IDisposable
     
     public ConfigWindow(Plugin plugin) : base("SizeChange Config")
     {
-        //Size = new Vector2(350, 280);
         SizeCondition = ImGuiCond.Always;
 
         configuration = plugin.Configuration;
@@ -60,11 +59,12 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
-        if (ImGui.DragFloat("Speed", ref speed, 0.1F, 0.1F, 100.0F))
+        if (ImGui.DragFloat("Speed", ref speed, 0.1F, 0.1F, 25.0F))
         {
             if(speed <= 0){
                 speed = 0.1f;
             }
+            speed = Math.Clamp(speed, 0.01f, 25.0f);
             configuration.Speed = speed/100f;
             configuration.Save();
         }
