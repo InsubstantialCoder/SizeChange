@@ -399,7 +399,7 @@ public sealed class Plugin : IDalamudPlugin
             {
                 charState = ContentIdToCharacterScaleMap[actor->ContentId];
                 previousScale = charState.PreviousScale;
-                if(!Configuration.Sync)
+                if(!Configuration.Sync && !isLocalPlayer)
                 {
                     charState.Syncing = false;
                     charState.PlayerScale = 1.0f;
