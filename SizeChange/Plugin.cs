@@ -77,6 +77,9 @@ public sealed class Plugin : IDalamudPlugin
 
     private readonly Stopwatch lastVerifiedReply = Stopwatch.StartNew();
     private const int ReplyTimeoutMs = 30_000;
+    private uint lastTerritoryType = 0;
+    private uint lastInstance = 0;
+    private Random rnd = new Random();
 
     public Plugin()
     {
@@ -297,28 +300,70 @@ public sealed class Plugin : IDalamudPlugin
             }
         }
 
+        //Yes, I know this is ugly. If I end up having to copy this block a third time I'll put it in a function or otherwise refactor.
         if(command == CommandName_Scale || command == CommandName_Shrink || command == CommandName_Grow)
         {
-            float from_arg;
-            if(float.TryParse(args, out from_arg))
+            char[] charSeparators = new char[] { ' ' };
+            string[] space_separated_args = args.Split(charSeparators, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+            if(space_separated_args.Length == 1)
             {
-                from_arg = Math.Abs(from_arg);
-                var player = ObjectTable.LocalPlayer;
-                if (player != null) 
+                float from_arg;
+                if(float.TryParse(args, out from_arg))
                 {
-                    if(command == CommandName_Scale)
+                    from_arg = Math.Abs(from_arg);
+                    var player = ObjectTable.LocalPlayer;
+                    if (player != null) 
                     {
-                        UpdateScale((Character*)player.Address, from_arg);
-                    }
-                    else if(command == CommandName_Shrink)
-                    {
-                        UpdateScale((Character*)player.Address, localScale/(1.0f + (from_arg/100.0f)));
-                    }
-                    else if(command == CommandName_Grow)
-                    {
-                        UpdateScale((Character*)player.Address, localScale*(1.0f + (from_arg/100.0f)));
+                        if(command == CommandName_Scale)
+                        {
+                            UpdateScale((Character*)player.Address, from_arg);
+                        }
+                        else if(command == CommandName_Shrink)
+                        {
+                            UpdateScale((Character*)player.Address, localScale/(1.0f + (from_arg/100.0f)));
+                        }
+                        else if(command == CommandName_Grow)
+                        {
+                            UpdateScale((Character*)player.Address, localScale*(1.0f + (from_arg/100.0f)));
+                        }
                     }
                 }
+            }
+            else if(space_separated_args.Length == 2)
+            {
+                float min_from_arg;
+                float max_from_arg;
+                if(float.TryParse(space_separated_args[0], out min_from_arg) && float.TryParse(space_separated_args[1], out max_from_arg))
+                {
+                    min_from_arg = Math.Abs(min_from_arg);
+                    max_from_arg = Math.Abs(max_from_arg);
+                    float from_random_range = rnd.NextSingle() * (max_from_arg - min_from_arg) + min_from_arg;
+                    var player = ObjectTable.LocalPlayer;
+                    if (player != null) 
+                    {
+
+                        if(command == CommandName_Scale)
+                        {
+                            UpdateScale((Character*)player.Address, from_random_range);
+                        }
+                        else if(command == CommandName_Shrink)
+                        {
+                            UpdateScale((Character*)player.Address, localScale/(1.0f + (from_random_range/100.0f)));
+                        }
+                        else if(command == CommandName_Grow)
+                        {
+                            UpdateScale((Character*)player.Address, localScale*(1.0f + (from_random_range/100.0f)));
+                        }
+                    }
+                }
+                else
+                {
+                    Logger.Warning("Invalid command entered /{command} {args}. Could not parse arguments.", command, args);
+                }
+            }
+            else
+            {
+                Logger.Warning("Invalid command entered. Expected one or two parameters, got {Length}. /{command} {args}", space_separated_args.Length, command, args);
             }
         }
     }
@@ -348,6 +393,9 @@ public sealed class Plugin : IDalamudPlugin
         var player = ObjectTable.LocalPlayer;
         if (player == null) return;
 
+        uint currentTerritoryType = ClientState.TerritoryType;
+        uint currentInstance = ClientState.Instance;
+
         ulong localId = ((Character*)player.Address)->ContentId;
         while(CharacterUpdates.TryDequeue(out SCContentIDScale[]? scaleMapping))
         {
@@ -367,6 +415,25 @@ public sealed class Plugin : IDalamudPlugin
             if (actor == null) continue;
             ulong actorContentId = ((Character*)actor.Address)->ContentId;
             bool isLocalPlayer = localId == actorContentId;
+            if(isLocalPlayer)
+            {
+                //Zone changed. Keep previous scale.
+                if(currentTerritoryType != lastTerritoryType || currentInstance != lastInstance)
+                {
+                    Logger.Warning("Zone change detected");
+                    if (ContentIdToCharacterScaleMap.TryGetValue(actorContentId, out var charState))
+                    {
+                        var draw = ((Character*)actor.Address)->DrawObject;
+                        if(draw != null)
+                        {
+                            lastTerritoryType = currentTerritoryType;
+                            lastInstance = currentInstance;
+                            draw->Scale.Y = charState.PreviousScale;
+                            ((Character*)actor.Address)->Scale = charState.PreviousScale;
+                        }
+                    }
+                }
+            }
 
             AdjustScale((Character*)actor.Address, Configuration.GrowFromDamage, disable || (!isLocalPlayer && !Configuration.AlterAnyone), isLocalPlayer);
         }
