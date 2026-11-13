@@ -382,7 +382,6 @@ public sealed class Plugin : IDalamudPlugin
                 var player = ObjectTable.LocalPlayer;
                 from_arg = Math.Clamp(from_arg, 0.0033f, 25.0f);
                 Configuration.Speed = Math.Clamp(from_arg / 100.0f, 0.0033f, 25.0f);
-                Configuration.Save();
             }
         }
     }
