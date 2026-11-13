@@ -59,12 +59,12 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
-        if (ImGui.DragFloat("Speed", ref speed, 0.1F, 0.1F, 25.0F))
+        if (ImGui.DragFloat("Speed", ref speed, 0.1f, 0.0033f, 25.0f))
         {
             if(speed <= 0){
-                speed = 0.1f;
+                speed = 0.0033f;
             }
-            speed = Math.Clamp(speed, 0.01f, 25.0f);
+            speed = Math.Clamp(speed, 0.0033f, 25.0f);
             configuration.Speed = speed/100f;
             configuration.Save();
         }

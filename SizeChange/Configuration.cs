@@ -11,7 +11,7 @@ public class Configuration : IPluginConfiguration
     // if true will shrink or grow any player
     public bool AlterAnyone { get; set; } = false;
     // the speed at which the model scales, higher is faster
-    public float Speed { get; set; } = 2.0f;
+    public float Speed { get; set; } = 0.02f;
     // the minimum size of the model
     public float MinScaleMultiplier { get; set; } = 0.1f;
     public float MaxScaleMultiplier { get; set; } = 1.0f;

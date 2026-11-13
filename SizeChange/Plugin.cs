@@ -46,6 +46,7 @@ public sealed class Plugin : IDalamudPlugin
     private const string CommandName_Scale = "/scale";
     private const string CommandName_Grow = "/grow";
     private const string CommandName_Shrink = "/shrink";
+    private const string CommandName_Speed = "/speed";
     private const string Parameter_Enable = "enable";
     private const string Parameter_Disable = "disable";
     private const int MS_PER_FRAME = 33;
@@ -109,6 +110,11 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.AddHandler(CommandName_Shrink, new CommandInfo(OnCommand)
         {
             HelpMessage = "decreases character's scale"
+        });
+
+        CommandManager.AddHandler(CommandName_Speed, new CommandInfo(OnCommand)
+        {
+            HelpMessage = "changes how quickly size changes happen"
         });
         
         
@@ -280,6 +286,7 @@ public sealed class Plugin : IDalamudPlugin
         CommandManager.RemoveHandler(CommandName_Scale);
         CommandManager.RemoveHandler(CommandName_Grow);
         CommandManager.RemoveHandler(CommandName_Shrink);
+        CommandManager.RemoveHandler(CommandName_Speed);
     }
 
     private unsafe void OnCommand(string command, string args)
@@ -364,6 +371,18 @@ public sealed class Plugin : IDalamudPlugin
             else
             {
                 Logger.Warning("Invalid command entered. Expected one or two parameters, got {Length}. /{command} {args}", space_separated_args.Length, command, args);
+            }
+        }
+        if(command == CommandName_Speed)
+        {
+            float from_arg;
+            if(float.TryParse(args, out from_arg))
+            {
+                from_arg = Math.Abs(from_arg);
+                var player = ObjectTable.LocalPlayer;
+                from_arg = Math.Clamp(from_arg, 0.0033f, 25.0f);
+                Configuration.Speed = Math.Clamp(from_arg / 100.0f, 0.0033f, 25.0f);
+                Configuration.Save();
             }
         }
     }
