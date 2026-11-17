@@ -495,7 +495,7 @@ public sealed class Plugin : IDalamudPlugin
                 charState.PlayerScale = 1.0f;
                 charState.Syncing = false;
             }
-            if (previousScale != scale)
+            if (!charState.Syncing && previousScale != scale)
             {
                 charState.PlayerScale = scale;
             }
