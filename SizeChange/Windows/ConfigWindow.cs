@@ -8,6 +8,7 @@ namespace SizeChange.Windows;
 public class ConfigWindow : Window, IDisposable
 {
     private readonly Configuration configuration;
+    public const float MINIMUM_SPEED = 0.00001f;
     
     public ConfigWindow(Plugin plugin) : base("SizeChange Config")
     {
@@ -59,12 +60,9 @@ public class ConfigWindow : Window, IDisposable
             configuration.Save();
         }
 
-        if (ImGui.DragFloat("Speed", ref speed, 0.1f, 0.0033f, 25.0f))
+        if (ImGui.DragFloat("Speed", ref speed, 0.1f, MINIMUM_SPEED, 25.0f))
         {
-            if(speed <= 0){
-                speed = 0.0033f;
-            }
-            speed = Math.Clamp(speed, 0.0033f, 25.0f);
+            speed = Math.Clamp(speed, MINIMUM_SPEED, 25.0f);
             configuration.Speed = speed/100f;
             configuration.Save();
         }
